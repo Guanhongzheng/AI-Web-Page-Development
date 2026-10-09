@@ -1,0 +1,258 @@
+// PersonaMate AI 数据模型
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  avatar       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile       Profile?
+  conversations ConversationMember[]
+  messages      Message[]
+  memories      Memory[]
+  emotions      Emotion[]
+  creations     Creation[]
+  growthRecords GrowthRecord[]
+  mcpLogs       McpLog[]
+  themes        UserTheme[]
+  wallpapers    UserWallpaper[]
+  music         UserMusic[]
+  uiPreferences UiPreference?
+  aiProviders   AiProvider[]
+  friendships   Friendship[]         @relation("userA")
+  friendshipsOf Friendship[]         @relation("userB")
+}
+
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  displayName    String
+  bio            String?
+  persona        String   // 个性画像 JSON：兴趣、风格、语言偏好等
+  emotionProfile String?  // 情绪基线 JSON
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Memory {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String
+  type      String   // chat | note | diary | creation | emotion | preference
+  topic     String?
+  emotion   String?  // 情绪标签
+  intensity Int?     // 0-100
+  embedding String?  // 向量（JSON 字符串）
+  meta      String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([userId, topic])
+  @@index([userId, emotion])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  type      String   // ai | user | group
+  name      String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  ConversationMember[]
+  messages Message[]
+  settings AiGroupSetting?
+}
+
+model ConversationMember {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  role           String   @default("member") // owner | member | ai
+  isAi           Boolean  @default(false)
+  lastReadAt     DateTime?
+  createdAt      DateTime @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           String   @default("text") // text | image | audio | system
+  emotion        String?
+  emotionData    String?
+  isAigc         Boolean  @default(false)
+  aigcMeta       String?
+  createdAt      DateTime @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id])
+  reads          MessageRead[]
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+}
+
+model Emotion {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String   // happy/sad/anxious/angry/calm/excited/neutral
+  intensity Int      // 0-100
+  confidence Float   // 0-1
+  source    String   // text | voice | image | manual
+  meta      String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Creation {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // poem | story | image | song | note
+  title     String?
+  content   String
+  emotion   String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GrowthRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // reflection | milestone | habit | insight
+  content   String
+  meta      String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model McpLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  toolName  String
+  input     String
+  output    String?
+  status    String   // success | error
+  duration  Int?     // ms
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+model UserTheme {
+  id        String   @id @default(cuid())
+  userId    String
+  mode      String   // light | dark | system
+  accent    String?
+  glassLevel Int     @default(2) // 1轻 2中 3重
+  emotionAdaptive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserWallpaper {
+  id        String   @id @default(cuid())
+  userId    String
+  source    String   // preset | upload | ai | dynamic
+  type      String?  // gradient | particles | music | image
+  config    String
+  active    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserMusic {
+  id         String   @id @default(cuid())
+  userId     String
+  neteaseId  String?
+  cookie     String?  // 加密存储
+  playlistId String?
+  autoRecommend Boolean @default(true)
+  volume     Int      @default(70)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UiPreference {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  fontSize   String   @default("medium")
+  animations Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AiProvider {
+  id         String   @id @default(cuid())
+  userId     String
+  provider   String   // openai | deepseek | qwen | glm | moonshot | anthropic | gemini | ollama | custom
+  name       String?
+  baseUrl    String
+  apiKeyEnc  String   // AES-256-GCM 加密
+  model      String
+  isActive   Boolean  @default(false)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+}
+
+model AiGroupSetting {
+  id             String   @id @default(cuid())
+  conversationId String   @unique
+  triggerMode    String   @default("mention") // mention | auto | keyword
+  keywords       String?
+  autoSummaryEvery Int   @default(20)
+  emotionAware   Boolean  @default(true)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model EmotionThemeLog {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String
+  theme     String
+  createdAt DateTime @default(now())
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userAId   String
+  userBId   String
+  status    String   @default("pending") // pending | accepted | blocked
+  createdAt DateTime @default(now())
+  userA     User     @relation("userA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User     @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+}

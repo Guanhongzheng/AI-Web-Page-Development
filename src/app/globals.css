@@ -1,0 +1,234 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 262 83% 96%;
+    --accent-foreground: 262 83% 40%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 262 83% 58%;
+    --radius: 0.85rem;
+
+    /* 玻璃质感 */
+    --glass-bg: rgba(255, 255, 255, 0.62);
+    --glass-border: rgba(15, 23, 42, 0.08);
+    --glass-shadow: 0 10px 40px rgba(31, 38, 135, 0.12);
+
+    /* 明暗自适应表面色（卡片内区块、chip、列表项） */
+    --surface: rgba(15, 23, 42, 0.045);
+    --surface-hover: rgba(15, 23, 42, 0.08);
+    --surface-border: rgba(15, 23, 42, 0.09);
+
+    /* 情绪色 */
+    --emotion-happy: 45 96% 55%;
+    --emotion-sad: 217 91% 60%;
+    --emotion-anxious: 258 90% 70%;
+    --emotion-angry: 0 84% 60%;
+    --emotion-calm: 160 84% 39%;
+    --emotion-excited: 25 95% 53%;
+    --emotion-neutral: 215 16% 65%;
+
+    color-scheme: light;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 263 90% 70%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 263 90% 20%;
+    --accent-foreground: 263 90% 85%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 263 90% 70%;
+
+    --glass-bg: rgba(17, 25, 40, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+
+    --surface: rgba(255, 255, 255, 0.05);
+    --surface-hover: rgba(255, 255, 255, 0.1);
+    --surface-border: rgba(255, 255, 255, 0.1);
+
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+    font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* 三级玻璃质感 */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    will-change: backdrop-filter;
+  }
+  .glass-light {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    opacity: 0.9;
+  }
+  .glass-strong {
+    background: color-mix(in srgb, var(--glass-bg) 70%, transparent);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    opacity: 0.95;
+  }
+  @media (max-width: 768px) {
+    .glass,
+    .glass-strong {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+  }
+
+  /* 玻璃高光 */
+  .glass-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-shine::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    pointer-events: none;
+  }
+  .glass-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.15), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* 语义表面色（明暗自适应，替代白底上不可见的 bg-white/5） */
+  .surface {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+  }
+  .surface-hover {
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .surface-hover:hover {
+    background: var(--surface-hover);
+  }
+
+  /* 排版润色 */
+  h1, h2, h3, h4 {
+    letter-spacing: -0.01em;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.25);
+  }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-muted-foreground/30;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* AI 消息渐变边框 */
+  .ai-message-border {
+    position: relative;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(59, 130, 246, 0.08));
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+  .ai-message-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #a855f7, #3b82f6, #a855f7);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* 壁纸过渡 */
+  .wallpaper-transition {
+    transition: opacity 2000ms ease-in-out;
+  }
+
+  /* 骨架屏 */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.2) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    @apply animate-shimmer rounded;
+  }
+
+  /* 流式光标 */
+  .stream-cursor::after {
+    content: '▋';
+    @apply ml-0.5 animate-pulse text-primary;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
