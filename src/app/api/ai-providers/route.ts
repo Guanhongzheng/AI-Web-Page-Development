@@ -17,7 +17,7 @@ export async function GET() {
     return ok({
       providers: PROVIDERS,
       defaults: Object.fromEntries(PROVIDERS.map((p) => [p, getProviderDefaults(p)])),
-      list: rows.map((r) => ({
+      list: rows.map((r: { id: string; provider: string; name: string | null; baseUrl: string | null; model: string; apiKeyEnc: string; isActive: boolean; isDefault: boolean }) => ({
         id: r.id,
         provider: r.provider,
         name: r.name,

@@ -1,6 +1,7 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import { Play, Pause, SkipForward, SkipBack, Volume2, Music } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Play, Pause, SkipForward, SkipBack, Volume2, X } from 'lucide-react'
+import { toast } from 'sonner'
 import { useMusicStore } from '@/stores/music'
 import { useEmotionStore } from '@/stores/emotion'
 import { Button } from '@/components/ui/button'
@@ -9,25 +10,33 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { EMOTION_THEMES } from '@/stores/emotion'
 
 export function FloatingMusicPlayer() {
-  const { current, isPlaying, playlist, volume, toggle, next, prev, setVolume, recommendReason } =
+  const { current, isPlaying, playlist, volume, toggle, next, prev, setVolume } =
     useMusicStore()
   const emotion = useEmotionStore((s) => s.current)
+  const [expanded, setExpanded] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const prompted = useRef(false)
   if (typeof Audio !== 'undefined' && !audioRef.current) {
     audioRef.current = new Audio()
     audioRef.current.loop = false
   }
 
-  // 真实音频播放：跟随当前曲目 / 播放状态 / 音量
+  // 真实音频播放
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !current) return
     if (current.url && audio.src !== current.url) audio.src = current.url
     audio.volume = Math.max(0, Math.min(1, volume / 100))
     if (isPlaying) {
-      audio.play().catch(() => useMusicStore.setState({ isPlaying: false }))
+      audio.play().catch(() => {
+        useMusicStore.setState({ isPlaying: false })
+        if (!prompted.current) {
+          prompted.current = true
+          toast('浏览器限制自动播放，请点击右下角播放按钮开始')
+        }
+      })
     } else {
       audio.pause()
     }
@@ -42,6 +51,7 @@ export function FloatingMusicPlayer() {
     return () => audio.removeEventListener('ended', onEnded)
   }, [next])
 
+  // 频谱可视化
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -66,50 +76,84 @@ export function FloatingMusicPlayer() {
     }
     draw()
     return () => cancelAnimationFrame(rafRef.current)
-  }, [isPlaying, emotion.label])
+  }, [isPlaying, emotion.label, expanded])
 
   if (playlist.length === 0) return null
 
+  const accent = EMOTION_THEMES[emotion.label]?.colors[1] ?? '#a855f7'
+
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        className="glass glass-shine fixed bottom-4 right-4 z-40 flex w-80 items-center gap-3 rounded-2xl p-3"
-      >
-        <canvas ref={canvasRef} width={96} height={36} className="h-9 w-24 rounded-md bg-black/20" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{current?.name ?? '未播放'}</p>
-          <p className="truncate text-xs text-muted-foreground">{current?.artist ?? ''}</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={prev}>
-            <SkipBack className="h-4 w-4" />
-          </Button>
-          <Button variant="glass" size="icon" className="h-9 w-9" onClick={toggle}>
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={next}>
-            <SkipForward className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-1">
-          <Volume2 className="h-3.5 w-3.5 text-muted-foreground" />
-          <Slider
-            value={[volume]}
-            onValueChange={(v) => setVolume(v[0] ?? 50)}
-            max={100}
-            className="w-16"
-          />
-        </div>
-        {recommendReason && (
-          <div className="absolute -top-2 left-3 rounded-full bg-primary/80 px-2 py-0.5 text-[10px] text-primary-foreground">
-            <Music className="mr-1 inline h-3 w-3" />
-            {recommendReason}
-          </div>
+    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            key="panel"
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="glass glass-shine relative w-72 rounded-2xl p-3 sm:w-80"
+          >
+            <canvas ref={canvasRef} width={240} height={36} className="mb-2 h-9 w-full rounded-md bg-black/20" />
+            <div className="flex items-center gap-2.5">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{current?.name ?? '未播放'}</p>
+                <p className="truncate text-xs text-muted-foreground">{current?.artist ?? ''}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); prev() }}>
+                  <SkipBack className="h-4 w-4" />
+                </Button>
+                <Button variant="glass" size="icon" className="h-9 w-9" onClick={(e) => { e.stopPropagation(); toggle() }}>
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); next() }}>
+                  <SkipForward className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <Volume2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <Slider
+                value={[volume]}
+                onValueChange={(v) => setVolume(v[0] ?? 50)}
+                max={100}
+                className="w-full"
+              />
+            </div>
+          </motion.div>
         )}
-      </motion.div>
-    </AnimatePresence>
+      </AnimatePresence>
+
+      {/* 圆形控制按钮：点击展开/收起，中间按钮播放/暂停 */}
+      <motion.button
+        onClick={() => setExpanded((v) => !v)}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.95 }}
+        className="glass glass-shine relative flex h-14 w-14 items-center justify-center rounded-full"
+        style={{ boxShadow: `0 6px 24px ${accent}55` }}
+        title={expanded ? '收起播放器' : '展开播放器'}
+      >
+        {isPlaying && (
+          <span
+            className="absolute inset-0 animate-ping rounded-full"
+            style={{ background: `${accent}22` }}
+          />
+        )}
+        <Button
+          variant="glass"
+          size="icon"
+          className="relative z-10 h-10 w-10 rounded-full"
+          onClick={(e) => { e.stopPropagation(); toggle() }}
+        >
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </Button>
+        {expanded && (
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-background text-foreground shadow">
+            <X className="h-3 w-3" />
+          </span>
+        )}
+      </motion.button>
+    </div>
   )
 }

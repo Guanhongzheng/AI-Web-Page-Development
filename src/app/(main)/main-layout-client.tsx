@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -31,6 +31,8 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
   const setAuth = useAuthStore((s) => s.setAuth)
   const { theme, setTheme } = useTheme()
   const fontSize = useUiStore((s) => s.fontSize)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   useEffect(() => {
     if (user) setAuth({ userId: user.id, username: user.username, avatar: user.avatar })
@@ -49,7 +51,7 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative flex min-h-screen flex-col">
       <WallpaperEngine />
 
       <header className="glass sticky top-0 z-30 flex h-16 items-center gap-3 px-4 sm:px-6">
@@ -65,7 +67,7 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
         </div>
         <div className="flex items-center gap-1.5">
           <Button variant="ghost" size="icon" onClick={cycleTheme} title="切换主题">
-            {theme === 'dark' ? <Moon className="h-4 w-4" /> : theme === 'light' ? <Sun className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
+            {!mounted ? <Monitor className="h-4 w-4" /> : theme === 'dark' ? <Moon className="h-4 w-4" /> : theme === 'light' ? <Sun className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
           </Button>
           <Button variant="ghost" size="icon" title="通知">
             <Bell className="h-4 w-4" />
@@ -100,7 +102,7 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
         })}
       </nav>
 
-      <main className="relative mx-auto w-full max-w-6xl px-4 py-6 pb-28 sm:px-6 lg:px-8">
+      <main className="relative mx-auto w-full max-w-7xl flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
@@ -113,6 +115,10 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
           </motion.div>
         </AnimatePresence>
       </main>
+
+      <footer className="mx-auto w-full max-w-7xl px-4 pb-6 pt-2 text-center text-xs text-muted-foreground sm:px-6 lg:px-8">
+        <p>PersonaMate AI · 情绪自适应界面 · 长期个人记忆 · AI 伴侣与社交对话平台</p>
+      </footer>
 
       <FloatingMusicPlayer />
     </div>

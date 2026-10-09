@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
@@ -23,6 +23,8 @@ const container = {
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const username = useAuthStore((s) => s.username)
   const emotion = useEmotionStore((s) => s.current)
   const setEmotion = useEmotionStore((s) => s.setEmotion)
@@ -37,34 +39,40 @@ export default function HomePage() {
     applyEmotion(emotion.label)
   }, [emotion.label, applyEmotion])
 
-  const playMoodMusic = async () => {
+  // 随机打乱
+  const shuffle = <T,>(arr: T[]): T[] => {
+    const a = [...arr]
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[a[i], a[j]] = [a[j], a[i]]
+    }
+    return a
+  }
+
+  const fallbackPlaylist = [
+    { id: '1', name: '晴天', artist: '周杰伦' },
+    { id: '2', name: '起风了', artist: '买辣椒也用券' },
+    { id: '3', name: '夜的钢琴曲五', artist: '石进' },
+    { id: '4', name: '城南花已开', artist: '三亩地' },
+    { id: '5', name: 'Lemon', artist: '米津玄師' },
+  ]
+
+  const playList = async (kind: 'daily' | 'mood' | 'focus') => {
+    const urls = {
+      daily: '/api/music/daily',
+      mood: `/api/music/recommend?mood=${emotion.label}`,
+      focus: '/api/music/search?keyword=纯音乐 专注&limit=20',
+    }
     try {
-      const res = await fetch(`/api/music/recommend?mood=${emotion.label}`)
+      const res = await fetch(urls[kind])
       const json = await res.json()
-      if (json.ok && json.data?.tracks?.length) {
-        setPlaylist(json.data.tracks, 0)
-        setRecommendReason(json.data.reason)
-        toast.success('已为你播放情绪歌单')
-      } else {
-        // 演示兜底：本地模拟歌单
-        setPlaylist(
-          [
-            { id: '1', name: '晴天', artist: '周杰伦' },
-            { id: '2', name: '起风了', artist: '买辣椒也用券' },
-            { id: '3', name: '夜的钢琴曲五', artist: '石进' },
-          ],
-          0,
-        )
-        setRecommendReason(`检测到你${emotionMeta(emotion.label).text}，为你推荐${EMOTION_THEMES[emotion.label].music}`)
-      }
+      const tracks: { id: string; name: string; artist: string }[] = json?.data?.tracks ?? json?.data ?? []
+      const list = tracks.length ? shuffle(tracks) : shuffle(fallbackPlaylist)
+      setPlaylist(list, 0)
+      setRecommendReason('')
+      toast.success(kind === 'daily' ? '已播放每日推荐（随机顺序）' : kind === 'focus' ? '已播放专注歌单（随机顺序）' : '已播放情绪歌单（随机顺序）')
     } catch {
-      setPlaylist(
-        [
-          { id: '1', name: '晴天', artist: '周杰伦' },
-          { id: '2', name: '起风了', artist: '买辣椒也用券' },
-        ],
-        0,
-      )
+      setPlaylist(shuffle(fallbackPlaylist), 0)
     }
   }
 
@@ -74,13 +82,13 @@ export default function HomePage() {
   }
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-5 sm:space-y-6">
       {/* 问候卡片 */}
       <motion.div variants={item}>
         <GlassCard className="relative overflow-hidden p-6 sm:p-8" glow>
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/20 blur-2xl" />
+          <div className="absolute left-1/2 top-0 h-20 w-56 -translate-x-1/2 rounded-full bg-primary/15 blur-2xl" />
           <div className="relative">
-            <p className="text-sm text-muted-foreground">{greeting()}，</p>
+            <p className="text-sm text-muted-foreground">{mounted ? greeting() : '你好'}，</p>
             <h1 className="mt-1 text-2xl font-bold sm:text-3xl">
               {profile?.displayName || username || '朋友'} <Sparkles className="ml-1 inline h-6 w-6 text-primary" />
             </h1>
@@ -105,7 +113,7 @@ export default function HomePage() {
       </motion.div>
 
       {/* 情绪仪表盘 三列 */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-3">
         <motion.div variants={item}>
           <GlassCard className="p-5">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -127,7 +135,7 @@ export default function HomePage() {
             <p className="mt-1 text-xs text-muted-foreground">
               理由：当前{emotionMeta(emotion.label).text}情绪，{EMOTION_THEMES[emotion.label].music}最匹配
             </p>
-            <Button className="mt-3 w-full" variant="glass" onClick={playMoodMusic}>
+            <Button className="mt-3 w-full" variant="glass" onClick={() => playList('mood')}>
               <Play className="h-4 w-4" /> 播放 AI 推荐歌单
             </Button>
           </GlassCard>
@@ -151,24 +159,24 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         {/* 推荐歌单 */}
         <motion.div variants={item} className="lg:col-span-2">
-          <GlassCard className="p-5">
+          <GlassCard className="flex h-full flex-col p-5">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-semibold">推荐歌单</h3>
-              <Link href="/settings" className="text-xs text-primary">音乐设置</Link>
+              <Link href="/settings?tab=music" className="text-xs text-primary">音乐设置</Link>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid flex-1 content-stretch gap-3 sm:grid-cols-3">
               {[
-                { name: '每日推荐', desc: '根据你的口味', icon: Music },
-                { name: '情绪歌单', desc: `${emotionMeta(emotion.label).text}专属`, icon: Heart },
-                { name: '专注歌单', desc: '进入心流', icon: BookOpen },
+                { name: '每日推荐', desc: '根据你的口味', icon: Music, kind: 'daily' as const },
+                { name: '情绪歌单', desc: `${emotionMeta(emotion.label).text}专属`, icon: Heart, kind: 'mood' as const },
+                { name: '专注歌单', desc: '进入心流', icon: BookOpen, kind: 'focus' as const },
               ].map((p, i) => (
                 <button
                   key={p.name}
-                  onClick={playMoodMusic}
-                  className="group rounded-xl surface p-4 text-left transition-all surface-hover"
+                  onClick={() => playList(p.kind)}
+                  className="group flex h-full flex-col rounded-xl surface p-4 text-left transition-all surface-hover"
                 >
                   <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/40 to-blue-500/40">
                     <p.icon className="h-5 w-5" />
@@ -183,7 +191,7 @@ export default function HomePage() {
 
         {/* 最近记忆 */}
         <motion.div variants={item}>
-          <GlassCard className="p-5">
+          <GlassCard className="flex h-full flex-col p-5">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-semibold">最近记忆</h3>
               <Link href="/memory" className="text-xs text-primary">全部 →</Link>

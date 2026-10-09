@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { GlassCard } from '@/components/ui/glass-card'
@@ -22,10 +22,15 @@ import {
 import { toast } from 'sonner'
 
 export default function SettingsPage() {
+  const [tab, setTab] = useState('appearance')
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab')
+    if (t) setTab(t)
+  }, [])
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <h1 className="mb-4 text-2xl font-bold">设置中心</h1>
-      <Tabs defaultValue="appearance" className="w-full">
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="mb-4 flex w-full flex-wrap">
           <TabsTrigger value="appearance"><Palette className="h-4 w-4" />外观</TabsTrigger>
           <TabsTrigger value="music"><Music className="h-4 w-4" />音乐</TabsTrigger>

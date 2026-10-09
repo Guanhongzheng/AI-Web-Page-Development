@@ -26,9 +26,9 @@
     --radius: 0.85rem;
 
     /* 玻璃质感 */
-    --glass-bg: rgba(255, 255, 255, 0.62);
-    --glass-border: rgba(15, 23, 42, 0.08);
-    --glass-shadow: 0 10px 40px rgba(31, 38, 135, 0.12);
+    --glass-bg: rgba(255, 255, 255, 0.5);
+    --glass-border: rgba(15, 23, 42, 0.1);
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.14);
 
     /* 明暗自适应表面色（卡片内区块、chip、列表项） */
     --surface: rgba(15, 23, 42, 0.045);
@@ -191,6 +191,7 @@
     padding: 1px;
     background: linear-gradient(135deg, #a855f7, #3b82f6, #a855f7);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
