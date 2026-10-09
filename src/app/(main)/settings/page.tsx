@@ -18,8 +18,53 @@ import { getProviderDefaults } from '@/lib/ai-gateway'
 import { maskApiKey } from '@/lib/utils'
 import {
   Palette, Music, Bot, Shield, Bell, User, Save, Trash2, KeyRound, Zap, Check, X, Loader2, Eye, EyeOff,
+  ScrollText, Sparkles, Wrench, Bug, Rocket,
 } from 'lucide-react'
 import { toast } from 'sonner'
+
+const CHANGELOG = [
+  {
+    version: 'v1.4.0', date: '2026-10-09', tag: '优化', tagColor: 'text-amber-500 bg-amber-500/15',
+    items: [
+      '音乐播放器改为圆形悬浮按钮，点击展开/收起控制面板',
+      '推荐歌单支持每日推荐、情绪歌单、专注歌单分别播放，歌曲随机顺序',
+      '玻璃质感降低不透明度，壁纸通透感更强；主页卡片等高对齐',
+      '修复日夜切换文字闪烁（Hydration 失配）与主题图标 SVG 不一致',
+    ],
+  },
+  {
+    version: 'v1.3.0', date: '2026-10-08', tag: '新功能', tagColor: 'text-green-500 bg-green-500/15',
+    items: [
+      '接入 NeteaseCloudMusicApi，音乐搜索 / 每日推荐 / 播放全部走网易云真实数据',
+      '用户自带 AI 接口支持 9 种服务商，Base URL 留空自动补默认地址，连接失败自动降级',
+      '设置中心新增音乐设置直达，推荐理由与 API Key 掩码展示',
+    ],
+  },
+  {
+    version: 'v1.2.0', date: '2026-10-07', tag: '新功能', tagColor: 'text-green-500 bg-green-500/15',
+    items: [
+      '情绪自适应界面：7 种情绪实时联动主题色、动态壁纸与音乐推荐',
+      '动态壁纸引擎：CSS 渐变流光 / Canvas 雨滴粒子 / 音乐响应式网格，2s 平滑过渡',
+      '日夜间模式三档切换（亮色 / 暗色 / 跟随系统），transition-colors 不闪屏',
+    ],
+  },
+  {
+    version: 'v1.1.0', date: '2026-10-06', tag: '新功能', tagColor: 'text-green-500 bg-green-500/15',
+    items: [
+      '统一对话中枢：AI 伴侣 / 好友 / 群聊三种会话，右侧能力面板自动切换',
+      'Agent 思考链可视化（LangGraph 8 节点）+ RAG 记忆检索引用溯源',
+      '群聊 AI 参与：@ 唤醒、自动总结、情绪感知、翻译辅助',
+    ],
+  },
+  {
+    version: 'v1.0.0', date: '2026-10-05', tag: '发布', tagColor: 'text-primary bg-primary/15',
+    items: [
+      'PersonaMate AI 首个完整版本上线',
+      '核心模块：个性化对话、个人记忆 RAG、多模态理解、AI 安全与隐私、实时社交',
+      '技术栈：Next.js 14 + React 18 + TypeScript + Tailwind + shadcn/ui + LangGraph',
+    ],
+  },
+]
 
 export default function SettingsPage() {
   const [tab, setTab] = useState('appearance')
@@ -38,6 +83,7 @@ export default function SettingsPage() {
           <TabsTrigger value="privacy"><Shield className="h-4 w-4" />隐私</TabsTrigger>
           <TabsTrigger value="notifications"><Bell className="h-4 w-4" />通知</TabsTrigger>
           <TabsTrigger value="account"><User className="h-4 w-4" />账号</TabsTrigger>
+          <TabsTrigger value="changelog"><ScrollText className="h-4 w-4" />更新日志</TabsTrigger>
         </TabsList>
         <TabsContent value="appearance"><AppearanceTab /></TabsContent>
         <TabsContent value="music"><MusicTab /></TabsContent>
@@ -45,6 +91,7 @@ export default function SettingsPage() {
         <TabsContent value="privacy"><PrivacyTab /></TabsContent>
         <TabsContent value="notifications"><NotificationsTab /></TabsContent>
         <TabsContent value="account"><AccountTab /></TabsContent>
+        <TabsContent value="changelog"><ChangelogTab /></TabsContent>
       </Tabs>
     </motion.div>
   )
@@ -333,6 +380,46 @@ function AccountTab() {
         <Input defaultValue={me?.email} disabled />
       </div>
       <Button variant="destructive">退出登录</Button>
+    </GlassCard>
+  )
+}
+
+function ChangelogTab() {
+  const tagIcon = (tag: string) => {
+    if (tag === '新功能') return <Sparkles className="h-3.5 w-3.5" />
+    if (tag === '优化') return <Wrench className="h-3.5 w-3.5" />
+    if (tag === '修复') return <Bug className="h-3.5 w-3.5" />
+    return <Rocket className="h-3.5 w-3.5" />
+  }
+  return (
+    <GlassCard className="p-6">
+      <div className="mb-4 flex items-center gap-2">
+        <ScrollText className="h-5 w-5 text-primary" />
+        <h3 className="font-semibold">更新日志</h3>
+        <span className="text-xs text-muted-foreground">PersonaMate AI 版本迭代记录</span>
+      </div>
+      <div className="relative space-y-6 before:absolute before:left-[7px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-border">
+        {CHANGELOG.map((c) => (
+          <div key={c.version} className="relative pl-7">
+            <span className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-primary bg-background" />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-bold">{c.version}</span>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ${c.tagColor}`}>
+                {tagIcon(c.tag)}{c.tag}
+              </span>
+              <span className="text-xs text-muted-foreground">{c.date}</span>
+            </div>
+            <ul className="mt-2 space-y-1">
+              {c.items.map((it, i) => (
+                <li key={i} className="flex gap-2 text-sm text-foreground/80">
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50" />
+                  {it}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </GlassCard>
   )
 }

@@ -34,10 +34,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       where: { conversationId_userId: { conversationId: params.id, userId: uid } },
     })
     if (!member) return fail('无权限', 403)
-    const { content, type = 'text', emotion, emotionData } = await req.json()
+    const { content, type = 'text', emotion, emotionData, isAigc } = await req.json()
     if (!content?.trim()) return fail('内容为空', 400)
+    const senderId = isAigc ? 'ai-companion' : uid
     const msg = await prisma.message.create({
-      data: { conversationId: params.id, senderId: uid, content, type, emotion, emotionData },
+      data: { conversationId: params.id, senderId, content, type, emotion, emotionData, isAigc: !!isAigc },
       include: { sender: { select: { id: true, username: true, avatar: true } } },
     })
     await prisma.conversation.update({ where: { id: params.id }, data: { updatedAt: new Date() } })

@@ -33,7 +33,7 @@ export default function HomePage() {
   const setRecommendReason = useMusicStore((s) => s.setRecommendReason)
 
   const { data: profile } = useQuery({ queryKey: ['profile'], queryFn: async () => (await fetch('/api/profiles').then((r) => r.json())).data })
-  const { data: memories } = useQuery({ queryKey: ['recent-memories'], queryFn: async () => (await fetch('/api/memories?limit=5').then((r) => r.json())).data })
+  const { data: memories, isLoading: memLoading } = useQuery({ queryKey: ['recent-memories'], queryFn: async () => (await fetch('/api/memories?limit=5').then((r) => r.json())).data })
 
   useEffect(() => {
     applyEmotion(emotion.label)
@@ -196,11 +196,15 @@ export default function HomePage() {
               <h3 className="font-semibold">最近记忆</h3>
               <Link href="/memory" className="text-xs text-primary">全部 →</Link>
             </div>
-            <div className="space-y-2">
-              {(memories ?? []).length === 0 ? (
-                <p className="py-6 text-center text-xs text-muted-foreground">还没有记忆，多和 AI 聊聊吧</p>
+            <div className="flex h-48 flex-1 flex-col space-y-2 overflow-y-auto pr-1">
+              {memLoading ? (
+                [0, 1, 2].map((i) => <div key={i} className="h-12 animate-pulse rounded-lg surface" />)
+              ) : (memories ?? []).length === 0 ? (
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-center text-xs text-muted-foreground">还没有记忆，多和 AI 聊聊吧</p>
+                </div>
               ) : (
-                memories.map((m: { id: string; content: string; createdAt: string; emotion?: string | null }) => (
+                (memories ?? []).slice(0, 4).map((m: { id: string; content: string; createdAt: string; emotion?: string | null }) => (
                   <div key={m.id} className="flex gap-2 rounded-lg surface p-2.5 text-xs">
                     <Quote className="mt-0.5 h-3 w-3 shrink-0 text-primary/60" />
                     <div className="min-w-0">

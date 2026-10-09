@@ -17,7 +17,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useEmotionStore } from '@/stores/emotion'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import {
-  Send, Bot, Sparkles, FileText, Languages, Lightbulb, Wand2, Heart, Music, AtSign, Loader2, MessageCircle, Users,
+  Send, Bot, BotOff, Sparkles, FileText, Languages, Lightbulb, Wand2, Heart, Music, AtSign, Loader2, MessageCircle, Users,
 } from 'lucide-react'
 import type { ChatMessage, AgentNodeState, MemoryItem, EmotionState } from '@/lib/types'
 import { toast } from 'sonner'
@@ -44,13 +44,24 @@ export default function ChatDetailPage() {
   const virtuosoRef = useRef<{ scrollToIndex: (i: number) => void }>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  const { data: conv } = useQuery({
+  const { data: conv, refetch: refetchConv } = useQuery({
     queryKey: ['conv', convId],
     queryFn: async () => {
       const list = (await fetch('/api/conversations').then((r) => r.json())).data as any[]
       return list.find((c) => c.id === convId)
     },
   })
+
+  const aiInGroup = !!conv?.members?.some((m: any) => m.userId === 'ai-companion')
+  const toggleAi = async (add: boolean) => {
+    try {
+      await fetch(`/api/conversations/${convId}/ai`, { method: add ? 'POST' : 'DELETE' })
+      await refetchConv()
+      toast.success(add ? '已将 AI 加入群聊（可被 @ 唤醒）' : '已将 AI 移出群聊')
+    } catch (e) {
+      toast.error((e as Error).message)
+    }
+  }
 
   const { data: messages = [], refetch } = useQuery({
     queryKey: ['messages', convId],
@@ -129,7 +140,7 @@ export default function ChatDetailPage() {
     setSending(true)
     try {
       const isAiConv = conv?.type === 'ai'
-      const isGroupMention = conv?.type === 'group' && /@AI|@PersonaMate|@AI助手/.test(text)
+      const isGroupMention = conv?.type === 'group' && aiInGroup && /@AI|@PersonaMate|@AI助手/.test(text)
 
       // 1. 保存用户消息
       const saveRes = await fetch(`/api/conversations/${convId}/messages`, {
@@ -224,6 +235,17 @@ export default function ChatDetailPage() {
               {connected && <span className="ml-2 text-green-400">● 实时连接</span>}
             </p>
           </div>
+          {isGroup && (
+            aiInGroup ? (
+              <Button variant="ghost" size="sm" onClick={() => toggleAi(false)} title="将 AI 移出群聊">
+                <BotOff className="mr-1 h-3.5 w-3.5" /> 移除 AI
+              </Button>
+            ) : (
+              <Button variant="glass" size="sm" onClick={() => toggleAi(true)} title="将 AI 加入群聊">
+                <Bot className="mr-1 h-3.5 w-3.5" /> 添加 AI
+              </Button>
+            )
+          )}
         </div>
 
         {/* 消息列表 虚拟滚动 */}
@@ -254,14 +276,6 @@ export default function ChatDetailPage() {
             </p>
           )}
         </div>
-
-        {/* Agent 思考链 + 记忆引用 */}
-        {(nodes.length > 0 || memories.length > 0) && (
-          <div className="space-y-2 border-t border-black/10 dark:border-white/10 px-4 py-3">
-            {nodes.length > 0 && <AgentTimeline nodes={nodes} />}
-            {memories.length > 0 && <MemoryPanel memories={memories} />}
-          </div>
-        )}
 
         {/* AI 辅助工具栏 */}
         <AnimatePresence>
@@ -318,6 +332,12 @@ export default function ChatDetailPage() {
 
       {/* 右侧信息面板 */}
       <div className="hidden flex-col gap-3 lg:flex">
+        {(nodes.length > 0 || memories.length > 0) && (
+          <GlassCard className="p-4">
+            {nodes.length > 0 && <AgentTimeline nodes={nodes} />}
+            {memories.length > 0 && <div className="mt-3"><MemoryPanel memories={memories} /></div>}
+          </GlassCard>
+        )}
         <GlassCard className="p-4">
           <h3 className="mb-2 text-sm font-semibold">会话能力</h3>
           <ul className="space-y-1.5 text-xs text-muted-foreground">

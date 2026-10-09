@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion'
 import { WallpaperEngine } from '@/components/wallpaper-engine'
 import { FloatingMusicPlayer } from '@/components/floating-music-player'
 import { useAuthStore } from '@/stores/auth'
@@ -31,6 +31,7 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
   const setAuth = useAuthStore((s) => s.setAuth)
   const { theme, setTheme } = useTheme()
   const fontSize = useUiStore((s) => s.fontSize)
+  const animations = useUiStore((s) => s.animations)
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
@@ -51,6 +52,7 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
   }
 
   return (
+    <MotionConfig transition={animations ? undefined : { duration: 0, delay: 0, staggerChildren: 0 }}>
     <div className="relative flex min-h-screen flex-col">
       <WallpaperEngine />
 
@@ -122,5 +124,6 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
 
       <FloatingMusicPlayer />
     </div>
+    </MotionConfig>
   )
 }

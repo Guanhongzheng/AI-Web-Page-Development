@@ -32,6 +32,7 @@ model User {
   aiProviders   AiProvider[]
   friendships   Friendship[]         @relation("userA")
   friendshipsOf Friendship[]         @relation("userB")
+  notifications Notification[]
 }
 
 model Profile {
@@ -255,4 +256,16 @@ model Friendship {
   userB     User     @relation("userB", fields: [userBId], references: [id], onDelete: Cascade)
 
   @@unique([userAId, userBId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   // 接收者
+  type      String   // friend_request | group_invite
+  data      String   // JSON: { fromUserId, fromUsername, conversationId?, convName? }
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
 }
