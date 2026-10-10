@@ -11,3 +11,6 @@ dist
 .vercel
 coverage
 .turbo
+*.tsbuildinfo
+.idea
+.vscode/*.log
