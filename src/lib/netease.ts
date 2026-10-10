@@ -55,6 +55,21 @@ export async function getSongUrls(ids: string[]): Promise<Record<string, string>
   return map
 }
 
+/** 检测网易云连接与登录状态 */
+export async function checkNeteaseStatus() {
+  const start = Date.now()
+  const data = await neteaseRequest('/login/status', {})
+  const profile = data?.data?.profile
+  return {
+    connected: true,
+    latency: Date.now() - start,
+    loggedIn: !!profile,
+    nickname: profile?.nickname ?? null,
+    userId: profile?.userId ? String(profile.userId) : null,
+    avatar: profile?.avatarUrl ?? null,
+  }
+}
+
 /** 给曲目列表补上可播放 url */
 export async function enrichWithUrl<T extends { id: string }>(tracks: T[]): Promise<(T & { url?: string })[]> {
   try {

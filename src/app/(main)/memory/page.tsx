@@ -29,13 +29,13 @@ export default function MemoryPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-      <div className="flex items-center justify-between">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex h-[calc(100vh-260px)] flex-col gap-4 overflow-hidden">
+      <div className="flex shrink-0 items-center justify-between">
         <h1 className="text-2xl font-bold">个人记忆库</h1>
         <span className="text-xs text-muted-foreground">BM25 + 向量混合检索 · RRF 融合 · 重排 Top5</span>
       </div>
 
-      <GlassCard className="p-4">
+      <GlassCard className="shrink-0 p-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -49,15 +49,15 @@ export default function MemoryPage() {
       </GlassCard>
 
       {searched && q && results.length > 0 && (
-        <GlassCard className="p-4">
+        <GlassCard className="shrink-0 p-4">
           <h3 className="mb-2 text-sm font-semibold">RAG 检索结果（可用于增强回复）</h3>
           <MemoryPanel memories={results} title="Top 相关记忆" />
         </GlassCard>
       )}
 
-      <GlassCard className="p-4">
-        <h3 className="mb-3 text-sm font-semibold">全部记忆（{results.length}）</h3>
-        <div className="space-y-2">
+      <GlassCard className="flex min-h-0 flex-1 flex-col p-4">
+        <h3 className="mb-3 shrink-0 text-sm font-semibold">全部记忆（{results.length}）</h3>
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
           {results.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">还没有记忆，去和 AI 聊聊吧</p>}
           {results.map((m: any) => (
             <motion.div key={m.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="group flex gap-2 rounded-xl surface p-3">

@@ -15,10 +15,10 @@ export default function GrowthPage() {
   const top = stats.topEmotion ? emotionMeta(stats.topEmotion) : null
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-      <h1 className="text-2xl font-bold">成长报告</h1>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex h-[calc(100vh-260px)] flex-col gap-4 overflow-hidden">
+      <h1 className="shrink-0 text-2xl font-bold">成长报告</h1>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid shrink-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { icon: Activity, label: '情绪记录', value: stats.emotionsCount ?? 0, color: 'text-purple-400' },
           { icon: Brain, label: '记忆沉淀', value: stats.memories ?? 0, color: 'text-blue-400' },
@@ -33,7 +33,7 @@ export default function GrowthPage() {
         ))}
       </div>
 
-      <GlassCard className="p-6">
+      <GlassCard className="shrink-0 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-semibold">近 30 天情感曲线</h3>
           {top && <span className="text-sm" style={{ color: top.color }}>主导情绪：{top.emoji} {top.text}</span>}
@@ -61,9 +61,9 @@ export default function GrowthPage() {
         </div>
       </GlassCard>
 
-      <GlassCard className="p-6">
-        <h3 className="mb-3 font-semibold">成长点滴</h3>
-        <div className="space-y-2">
+      <GlassCard className="flex min-h-0 flex-1 flex-col p-6">
+        <h3 className="mb-3 shrink-0 font-semibold">成长点滴</h3>
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
           {(data?.growth ?? []).map((g: any) => (
             <div key={g.id} className="flex gap-3 rounded-lg surface p-3 text-sm">
               <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

@@ -1,8 +1,8 @@
-import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireUser } from '@/lib/auth'
-import { ok, fail, handleApiError } from '@/lib/api'
+import { ok, handleApiError } from '@/lib/api'
 
+// GET 好友列表 + 待处理请求
 export async function GET() {
   try {
     const uid = await requireUser()
@@ -13,28 +13,19 @@ export async function GET() {
         userB: { select: { id: true, username: true, avatar: true } },
       },
     })
-    return ok(rows)
-  } catch (e) {
-    return handleApiError(e)
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const uid = await requireUser()
-    const { targetId } = await req.json()
-    if (targetId === uid) return fail('不能添加自己', 400)
-    const exists = await prisma.friendship.findFirst({
-      where: {
-        OR: [
-          { userAId: uid, userBId: targetId },
-          { userAId: targetId, userBId: uid },
-        ],
-      },
-    })
-    if (exists) return fail('已存在好友关系', 409)
-    const row = await prisma.friendship.create({ data: { userAId: uid, userBId: targetId, status: 'pending' } })
-    return ok(row)
+    const friends = []
+    const incoming = []
+    const outgoing = []
+    for (const r of rows) {
+      const other = r.userAId === uid ? r.userB : r.userA
+      const item = { id: r.id, userId: other.id, username: other.username, avatar: other.avatar, status: r.status }
+      if (r.status === 'accepted') friends.push(item)
+      else if (r.status === 'pending') {
+        if (r.userBId === uid) incoming.push(item) // 别人发给我
+        else outgoing.push(item) // 我发给别人
+      }
+    }
+    return ok({ friends, incoming, outgoing })
   } catch (e) {
     return handleApiError(e)
   }

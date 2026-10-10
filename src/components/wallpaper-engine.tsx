@@ -2,6 +2,54 @@
 import { useEffect, useRef } from 'react'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import { useEmotionStore } from '@/stores/emotion'
+import { useUiStore } from '@/stores/ui'
+
+// RGB(0-255) → HSL，h 为角度(0-360)，s/l 为百分比(0-100)
+function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  r /= 255
+  g /= 255
+  b /= 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h = 0
+  let s = 0
+  const l = (max + min) / 2
+  if (max !== min) {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0)
+        break
+      case g:
+        h = (b - r) / d + 2
+        break
+      default:
+        h = (r - g) / d + 4
+    }
+    h /= 6
+  }
+  return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)]
+}
+
+function ImageWallpaper({ src }: { src: string }) {
+  if (/\.html(\?|$)/i.test(src)) {
+    return (
+      <iframe
+        src={src}
+        title="wallpaper"
+        className="absolute inset-0 h-full w-full border-0"
+        style={{ pointerEvents: 'none' }}
+      />
+    )
+  }
+  return (
+    <div
+      className="wallpaper-transition absolute inset-0 bg-cover bg-center"
+      style={{ backgroundImage: `url(${src})` }}
+    />
+  )
+}
 
 function GradientWallpaper({ colors }: { colors: string[] }) {
   const [c1, c2, c3] = colors
@@ -167,9 +215,85 @@ export function WallpaperEngine() {
   const { config, transitionKey } = useWallpaperStore()
   const current = useEmotionStore((s) => s.current)
   const adaptive = useEmotionStore((s) => s.adaptiveEnabled)
+  const wallpaper = useUiStore((s) => s.wallpaper)
+  const bgBlur = useUiStore((s) => s.bgBlur)
   const effective = adaptive && current.label !== 'neutral' && current.intensity > 40 ? current.label : config.emotion
 
+  // 根据壁纸自动取色，生成一套舒适的协调配色（深色界面 + 主题色调，文字始终清晰）
+  useEffect(() => {
+    const root = document.documentElement
+    const reset = () => {
+      ;['--primary', '--ring', '--card', '--popover', '--muted', '--border', '--input', '--secondary', '--secondary-foreground', '--accent', '--accent-foreground'].forEach((k) => root.style.removeProperty(k))
+    }
+    if (!wallpaper || /\.html(\?|$)/i.test(wallpaper)) {
+      reset()
+      return
+    }
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        const size = 64
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        ctx.drawImage(img, 0, 0, size, size)
+        const data = ctx.getImageData(0, 0, size, size).data
+        let r = 0
+        let g = 0
+        let b = 0
+        let count = 0
+        for (let i = 0; i < data.length; i += 4) {
+          const rr = data[i]
+          const gg = data[i + 1]
+          const bb = data[i + 2]
+          const mx = Math.max(rr, gg, bb)
+          const mn = Math.min(rr, gg, bb)
+          if (mx - mn < 18) continue
+          if (mx > 235 && mn > 235) continue
+          if (mx < 25) continue
+          r += rr
+          g += gg
+          b += bb
+          count++
+        }
+        if (count === 0) {
+          reset()
+          return
+        }
+        const [h] = rgbToHsl(r / count, g / count, b / count)
+        const sat = 80
+        // 同一色相、不同明度/饱和度，构成舒适且有层次的配色
+        const vars: Record<string, string> = {
+          '--primary': `${h} ${sat}% 58%`,
+          '--ring': `${h} ${sat}% 58%`,
+          '--card': `${h} 24% 13%`,
+          '--popover': `${h} 24% 13%`,
+          '--muted': `${h} 20% 19%`,
+          '--border': `${h} 24% 24%`,
+          '--input': `${h} 24% 24%`,
+          '--secondary': `${h} 22% 17%`,
+          '--secondary-foreground': `${h} 30% 92%`,
+          '--accent': `${h} 45% 24%`,
+          '--accent-foreground': `${h} 60% 86%`,
+        }
+        Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v))
+      } catch {
+        reset()
+      }
+    }
+    img.onerror = reset
+    img.src = wallpaper
+    return () => {
+      img.onload = null
+      img.onerror = null
+    }
+  }, [wallpaper])
+
   const renderWallpaper = () => {
+    if (wallpaper) return <ImageWallpaper key={wallpaper} src={wallpaper} />
     const colors = config.colors ?? ['#1e293b', '#6366f1']
     if (effective === 'sad') return <RainWallpaper key="sad" colors={['#1e3a8a', '#0f172a']} />
     if (effective === 'anxious') return <StarryWallpaper key="anxious" colors={['#312e81', '#1e1b4b']} />
@@ -178,9 +302,15 @@ export function WallpaperEngine() {
     return <GradientWallpaper key="gradient" colors={colors} />
   }
 
+  // 即时切换：不做淡入淡出，避免切换壁纸时的渐显闪烁
+  const layerKey = wallpaper
+    ? `img:${wallpaper}`
+    : `emotion:${transitionKey}:${effective}:${config.type}:${(config.colors ?? []).join(',')}`
+  const blurStyle = bgBlur > 0 ? { filter: `blur(${bgBlur}px)`, transform: 'scale(1.08)' } : undefined
+
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      <div key={transitionKey} className="wallpaper-transition absolute inset-0 animate-fade-in">
+      <div key={layerKey} className="absolute inset-0" style={blurStyle}>
         {renderWallpaper()}
       </div>
       <div className="absolute inset-0 bg-black/10" />

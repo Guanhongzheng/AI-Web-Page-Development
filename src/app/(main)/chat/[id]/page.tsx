@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { Virtuoso } from 'react-virtuoso'
+
 import { motion, AnimatePresence } from 'framer-motion'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useEmotionStore } from '@/stores/emotion'
 import { useWallpaperStore } from '@/stores/wallpaper'
 import {
-  Send, Bot, BotOff, Sparkles, FileText, Languages, Lightbulb, Wand2, Heart, Music, AtSign, Loader2, MessageCircle, Users,
+  Send, Bot, BotOff, Sparkles, FileText, Languages, Lightbulb, Wand2, Heart, Music, AtSign, Loader2, MessageCircle, Users, UserPlus, Brain, ChevronDown,
 } from 'lucide-react'
 import type { ChatMessage, AgentNodeState, MemoryItem, EmotionState } from '@/lib/types'
 import { toast } from 'sonner'
@@ -41,7 +41,7 @@ export default function ChatDetailPage() {
   const [assistResult, setAssistResult] = useState<string | null>(null)
   const [assistLoading, setAssistLoading] = useState(false)
   const [typingUsers, setTypingUsers] = useState<string[]>([])
-  const virtuosoRef = useRef<{ scrollToIndex: (i: number) => void }>(null)
+  const [showMobileChain, setShowMobileChain] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const { data: conv, refetch: refetchConv } = useQuery({
@@ -53,6 +53,22 @@ export default function ChatDetailPage() {
   })
 
   const aiInGroup = !!conv?.members?.some((m: any) => m.userId === 'ai-companion')
+  const inviteToGroup = async () => {
+    const id = window.prompt('输入要邀请进群的用户 ID：')?.trim()
+    if (!id) return
+    try {
+      const res = await fetch(`/api/conversations/${convId}/invite`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ userId: id }),
+      })
+      const json = await res.json()
+      if (json.ok) toast.success('邀请已发送，对方在通知中确认后即入群')
+      else toast.error(json.error || '邀请失败')
+    } catch (e) {
+      toast.error((e as Error).message)
+    }
+  }
   const toggleAi = async (add: boolean) => {
     try {
       await fetch(`/api/conversations/${convId}/ai`, { method: add ? 'POST' : 'DELETE' })
@@ -96,7 +112,7 @@ export default function ChatDetailPage() {
   ]
 
   useEffect(() => {
-    if (displayMessages.length) setTimeout(() => virtuosoRef.current?.scrollToIndex(displayMessages.length - 1), 50)
+    if (displayMessages.length) setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 50)
   }, [displayMessages.length])
 
   const parseSse = useCallback((reader: ReadableStreamDefaultReader<Uint8Array>) => {
@@ -219,7 +235,7 @@ export default function ChatDetailPage() {
   const isGroup = conv.type === 'group'
 
   return (
-    <div className="grid h-[calc(100vh-180px)] gap-4 lg:grid-cols-[1fr_300px]">
+    <div className="grid h-[calc(100vh-260px)] gap-4 md:grid-cols-[1fr_300px]">
       <GlassCard className="flex flex-col overflow-hidden p-0">
         {/* 头部 */}
         <div className="flex items-center gap-3 border-b border-black/10 dark:border-white/10 px-4 py-3">
@@ -236,20 +252,25 @@ export default function ChatDetailPage() {
             </p>
           </div>
           {isGroup && (
-            aiInGroup ? (
-              <Button variant="ghost" size="sm" onClick={() => toggleAi(false)} title="将 AI 移出群聊">
-                <BotOff className="mr-1 h-3.5 w-3.5" /> 移除 AI
+            <>
+              <Button variant="ghost" size="sm" onClick={inviteToGroup} title="邀请好友进群">
+                <UserPlus className="mr-1 h-3.5 w-3.5" /> 邀请进群
               </Button>
-            ) : (
-              <Button variant="glass" size="sm" onClick={() => toggleAi(true)} title="将 AI 加入群聊">
-                <Bot className="mr-1 h-3.5 w-3.5" /> 添加 AI
-              </Button>
-            )
+              {aiInGroup ? (
+                <Button variant="ghost" size="sm" onClick={() => toggleAi(false)} title="将 AI 移出群聊">
+                  <BotOff className="mr-1 h-3.5 w-3.5" /> 移除 AI
+                </Button>
+              ) : (
+                <Button variant="glass" size="sm" onClick={() => toggleAi(true)} title="将 AI 加入群聊">
+                  <Bot className="mr-1 h-3.5 w-3.5" /> 添加 AI
+                </Button>
+              )}
+            </>
           )}
         </div>
 
-        {/* 消息列表 虚拟滚动 */}
-        <div className="flex-1 overflow-hidden px-4 py-3">
+        {/* 消息列表 */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           {displayMessages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
               <Sparkles className="mb-2 h-8 w-8 text-primary/60" />
@@ -257,16 +278,13 @@ export default function ChatDetailPage() {
               <p className="mt-1 text-xs">试试说「今天有点累」，看情绪自适应如何生效</p>
             </div>
           ) : (
-            <Virtuoso
-              ref={virtuosoRef as any}
-              data={displayMessages}
-              itemContent={(_, msg) => (
-                <div className="py-1.5">
+            <div className="space-y-1.5">
+              {displayMessages.map((msg) => (
+                <div key={msg.id} className="py-1.5">
                   <MessageBubble msg={msg} streaming={msg.id === 'streaming'} />
                 </div>
-              )}
-              followOutput="smooth"
-            />
+              ))}
+            </div>
           )}
           <div ref={bottomRef} />
           {typingUsers.length > 0 && (
@@ -276,6 +294,26 @@ export default function ChatDetailPage() {
             </p>
           )}
         </div>
+
+        {/* 移动端思考链（窄屏折叠，右侧面板在 md 以下隐藏） */}
+        {(nodes.length > 0 || memories.length > 0) && (
+          <div className="border-t border-black/10 md:hidden dark:border-white/10">
+            <button onClick={() => setShowMobileChain((v) => !v)} className="flex w-full items-center justify-between px-4 py-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> Agent 思考链{nodes.length > 0 && ` · ${nodes.filter((n) => n.status === 'done').length}/${nodes.length}`}</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showMobileChain ? 'rotate-180' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {showMobileChain && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                  <div className="px-4 pb-3">
+                    {nodes.length > 0 && <AgentTimeline nodes={nodes} />}
+                    {memories.length > 0 && <div className="mt-2"><MemoryPanel memories={memories} /></div>}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* AI 辅助工具栏 */}
         <AnimatePresence>
@@ -331,7 +369,7 @@ export default function ChatDetailPage() {
       </GlassCard>
 
       {/* 右侧信息面板 */}
-      <div className="hidden flex-col gap-3 lg:flex">
+      <div className="hidden min-h-0 flex-col gap-3 overflow-y-auto md:flex">
         {(nodes.length > 0 || memories.length > 0) && (
           <GlassCard className="p-4">
             {nodes.length > 0 && <AgentTimeline nodes={nodes} />}

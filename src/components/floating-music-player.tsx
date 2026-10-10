@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { Play, Pause, SkipForward, SkipBack, Volume2, X } from 'lucide-react'
+import { Play, Pause, SkipForward, SkipBack, Volume2, X, ChevronUp, ChevronDown, ListMusic } from 'lucide-react'
 import { toast } from 'sonner'
 import { useMusicStore } from '@/stores/music'
 import { useEmotionStore } from '@/stores/emotion'
@@ -10,10 +10,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { EMOTION_THEMES } from '@/stores/emotion'
 
 export function FloatingMusicPlayer() {
-  const { current, isPlaying, playlist, volume, toggle, next, prev, setVolume } =
+  const { current, isPlaying, playlist, volume, netease, toggle, next, prev, setVolume } =
     useMusicStore()
   const emotion = useEmotionStore((s) => s.current)
   const [expanded, setExpanded] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -27,7 +28,12 @@ export function FloatingMusicPlayer() {
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !current) return
-    if (current.url && audio.src !== current.url) audio.src = current.url
+    // 当前曲目无可用音源时自动跳到下一首
+    if (!current.url) {
+      const t = setTimeout(() => next(), 300)
+      return () => clearTimeout(t)
+    }
+    if (audio.src !== current.url) audio.src = current.url
     audio.volume = Math.max(0, Math.min(1, volume / 100))
     if (isPlaying) {
       audio.play().catch(() => {
@@ -40,7 +46,7 @@ export function FloatingMusicPlayer() {
     } else {
       audio.pause()
     }
-  }, [current?.url, isPlaying, volume, current])
+  }, [current?.url, isPlaying, volume, current, next])
 
   // 播完自动下一首
   useEffect(() => {
@@ -78,12 +84,51 @@ export function FloatingMusicPlayer() {
     return () => cancelAnimationFrame(rafRef.current)
   }, [isPlaying, emotion.label, expanded])
 
-  if (playlist.length === 0) return null
+  // 点击播放器外部时自动收起
+  useEffect(() => {
+    if (!expanded) return
+    const onClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setExpanded(false)
+      }
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [expanded])
+
+  const connColor = netease.checking ? 'bg-amber-400 animate-pulse' : netease.connected ? 'bg-green-500' : 'bg-red-500'
+  const connText = netease.checking ? '连接中…' : netease.connected ? `已连接${netease.nickname ? ` · ${netease.nickname}` : ''}` : '未连接'
+  const connTitle = netease.checking ? '连接中…' : netease.connected ? `网易云已连接${netease.nickname ? `：${netease.nickname}` : ''}` : '网易云未连接'
+  const StatusPill = (
+    <div className="glass flex items-center gap-1.5 self-center rounded-full px-2.5 py-1 text-[10px] text-muted-foreground" title={connTitle}>
+      <span className={`h-2 w-2 rounded-full ${connColor}`} />
+      <span>网易云{connText}</span>
+    </div>
+  )
+
+  if (playlist.length === 0 && !expanded) {
+    // 无播放列表时仍显示圆形播放按钮与居中的连接状态
+    return (
+      <div ref={containerRef} className="fixed bottom-4 right-4 z-40 flex flex-col items-center gap-2">
+        {StatusPill}
+        <motion.button
+          onClick={() => setExpanded(true)}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.95 }}
+          className="glass glass-shine relative flex h-14 w-14 items-center justify-center rounded-full text-muted-foreground"
+          title="展开播放器"
+        >
+          <Play className="h-5 w-5" />
+        </motion.button>
+      </div>
+    )
+  }
 
   const accent = EMOTION_THEMES[emotion.label]?.colors[1] ?? '#a855f7'
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
+    <div ref={containerRef} className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
+      {StatusPill}
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -125,35 +170,37 @@ export function FloatingMusicPlayer() {
         )}
       </AnimatePresence>
 
-      {/* 圆形控制按钮：点击展开/收起，中间按钮播放/暂停 */}
-      <motion.button
-        onClick={() => setExpanded((v) => !v)}
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.95 }}
-        className="glass glass-shine relative flex h-14 w-14 items-center justify-center rounded-full"
-        style={{ boxShadow: `0 6px 24px ${accent}55` }}
-        title={expanded ? '收起播放器' : '展开播放器'}
-      >
-        {isPlaying && (
-          <span
-            className="absolute inset-0 animate-ping rounded-full"
-            style={{ background: `${accent}22` }}
-          />
-        )}
-        <Button
-          variant="glass"
-          size="icon"
-          className="relative z-10 h-10 w-10 rounded-full"
-          onClick={(e) => { e.stopPropagation(); toggle() }}
+      {/* 控制栏：展开按钮 + 主播放按钮 */}
+      <div className="flex items-center gap-2">
+        <motion.button
+          onClick={() => setExpanded((v) => !v)}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          className="glass flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground"
+          title={expanded ? '收起播放器' : '展开播放器'}
         >
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-        {expanded && (
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-background text-foreground shadow">
-            <X className="h-3 w-3" />
+          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+        </motion.button>
+        <motion.button
+          onClick={toggle}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.95 }}
+          className="glass glass-shine relative flex h-14 w-14 items-center justify-center rounded-full"
+          style={{ boxShadow: `0 6px 24px ${accent}55` }}
+          title={isPlaying ? '暂停' : '播放'}
+        >
+          {isPlaying && (
+            <span className="absolute inset-0 animate-ping rounded-full" style={{ background: `${accent}22` }} />
+          )}
+          <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
           </span>
-        )}
-      </motion.button>
+        </motion.button>
+        <div className="glass flex h-9 min-w-9 items-center justify-center rounded-full px-2.5 text-[10px] text-muted-foreground">
+          <ListMusic className="mr-1 h-3 w-3" />
+          {playlist.length > 0 ? `${(useMusicStore.getState().currentIndex ?? 0) + 1}/${playlist.length}` : '0'}
+        </div>
+      </div>
     </div>
   )
 }

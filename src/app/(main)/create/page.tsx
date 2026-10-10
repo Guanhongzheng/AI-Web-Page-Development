@@ -44,8 +44,8 @@ export default function CreatePage() {
   ]
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid gap-4 lg:grid-cols-2">
-      <GlassCard className="p-6">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex h-[calc(100vh-260px)] gap-4 overflow-hidden">
+      <GlassCard className="w-full shrink-0 p-6 lg:w-1/2">
         <h2 className="mb-4 text-xl font-bold"><Sparkles className="mr-1 inline h-5 w-5 text-primary" />创作空间</h2>
         <div className="mb-4 grid grid-cols-4 gap-2">
           {TYPES.map((t) => (
@@ -56,7 +56,7 @@ export default function CreatePage() {
           ))}
         </div>
         <Label className="mb-1 block text-sm">创作主题 / 情绪</Label>
-        <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="比如：写一首关于雨夜思念的诗，带点伤感..." className="min-h-[120px]" />
+        <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="比如：写一首关于雨夜思念的诗，带点伤感..." className="min-h-[88px] max-h-[180px] resize-none" />
         <Button className="mt-3 w-full" disabled={loading || !prompt.trim()} onClick={generate}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
           {loading ? '生成中...' : '开始创作'}
@@ -64,19 +64,21 @@ export default function CreatePage() {
         <p className="mt-2 text-xs text-muted-foreground">作品会自动存入记忆库，影响未来个性化回复</p>
       </GlassCard>
 
-      <div className="space-y-3">
-        <h3 className="px-1 font-semibold">我的作品</h3>
-        {(list ?? []).map((c: any) => (
-          <GlassCard key={c.id} className="p-4">
-            <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-              <span className="rounded bg-primary/20 px-2 py-0.5 text-primary">{c.type}</span>
-              <span>{new Date(c.createdAt).toLocaleString('zh-CN')}</span>
+      <GlassCard className="flex min-w-0 flex-1 flex-col overflow-hidden p-4">
+        <h3 className="mb-3 shrink-0 px-1 font-semibold">我的作品</h3>
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+          {(list ?? []).map((c: any) => (
+            <div key={c.id} className="rounded-xl border border-border bg-muted/30 p-4">
+              <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+                <span className="rounded bg-primary/20 px-2 py-0.5 text-primary">{c.type}</span>
+                <span>{new Date(c.createdAt).toLocaleString('zh-CN')}</span>
+              </div>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed">{c.content}</p>
             </div>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">{c.content}</p>
-          </GlassCard>
-        ))}
-        {(list ?? []).length === 0 && <GlassCard className="p-8 text-center text-sm text-muted-foreground">还没有作品，开始你的第一次创作吧</GlassCard>}
-      </div>
+          ))}
+          {(list ?? []).length === 0 && <div className="rounded-xl border border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">还没有作品，开始你的第一次创作吧</div>}
+        </div>
+      </GlassCard>
     </motion.div>
   )
 }

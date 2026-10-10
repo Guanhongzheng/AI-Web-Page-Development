@@ -10,7 +10,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { useTheme } from 'next-themes'
 import { useUiStore } from '@/stores/ui'
 import { useEmotionStore } from '@/stores/emotion'
 import { useWallpaperStore } from '@/stores/wallpaper'
@@ -23,6 +22,61 @@ import {
 import { toast } from 'sonner'
 
 const CHANGELOG = [
+  {
+    version: 'v1.8.0', date: '2026-10-10', tag: '新功能', tagColor: 'text-green-500 bg-green-500/15',
+    items: [
+      '新增网站介绍首屏：进入时先展示整屏介绍（实时时钟 / 问候语 / 品牌展示），向下滚动一下即进入主应用',
+      '进入主应用后滚动无法回到介绍页，可通过顶栏「回到介绍页」按钮返回；顶栏 / Dock / 播放器仅在主应用区显示',
+      '移除专注模式，取消顶栏与 Dock 的滚动自动隐藏，布局更稳定',
+      '主页所有卡片收纳进同一屏（无需滚动查看）；主页内容可内部滚动但无法滚回介绍页',
+      '「当前情绪」卡片精简为仅显示情绪，去掉置信度、强度与自适应说明文字',
+    ],
+  },
+  {
+    version: 'v1.7.0', date: '2026-10-10', tag: '优化', tagColor: 'text-amber-500 bg-amber-500/15',
+    items: [
+      '统一所有页面尺寸：主内容区固定为视口高度并内部滚动，切换页面时大小不再忽大忽小',
+      '壁纸取色升级：提取壁纸主色相，生成同色相不同明度/饱和度的协调配色，卡片层次舒适且颜色不雷同',
+      '壁纸切换改为交叉淡入淡出，修复切换情绪、AI 回复时背景闪烁的问题',
+      '顶栏上滑自动隐藏、底部 Dock 下滑自动隐藏，鼠标靠近边缘或反向滚动即恢复显示',
+      '新增专注模式（顶栏按钮 / Esc 退出），加宽内容区且不隐藏 Dock 导航',
+      '创作空间：主题/情绪输入框限制高度不可拖拽放大，「我的作品」加入独立背景卡片并内部滚动',
+      'AI 消息支持悬停语音朗读与双击复制，进入网页自动检测网易云连接状态并提示',
+    ],
+  },
+  {
+    version: 'v1.6.0', date: '2026-10-10', tag: '新功能', tagColor: 'text-green-500 bg-green-500/15',
+    items: [
+      '新增壁纸系统：自动读取 public/wallpapers 文件夹，支持 jpg / png / 动态 html，选中即时切换全站背景',
+      '新增「配色跟随壁纸」：自动提取壁纸主色生成完整色板，亮色壁纸配深色字、暗色壁纸配浅色字，文字始终清晰',
+      '新增背景模糊度调节（0–20px），壁纸虚化程度自由控制',
+      '新增顶栏全局搜索：实时检索会话、记忆、用户，分组下拉展示并可一键跳转',
+      '新增会话列表删除功能，通知中心卡片美化并适配主题色',
+    ],
+  },
+  {
+    version: 'v1.5.1', date: '2026-10-10', tag: '优化', tagColor: 'text-amber-500 bg-amber-500/15',
+    items: [
+      '界面统一改为「卡片内滚动」：浏览器不滚动，对话/记忆/创作/成长/画像仅内容区滚动，页面铺满视口',
+      '玻璃质感升级为真实「液态玻璃 / 毛玻璃 / 亚克力」三档，顶栏与导航栏同步跟随质感',
+      '顶栏与导航栏增加连接分隔线，修复导航栏上下重叠与动态壁纸透过玻璃闪烁的问题',
+      '简化外观设置：移除主题配色选项，配色完全由壁纸驱动，顶栏主题按钮同步下线',
+      '推荐歌单改为可播放的心动歌单，当前情绪 / 为你推荐 / 推荐歌单三卡等高对齐、内容铺满',
+      '音乐播放器按钮重构，修复只能播放一首的问题，展开后点击页面任意位置自动收回',
+      '优化页面切换速度（popLayout + 缩短过渡），通知与主题弹窗加入弹出动画',
+    ],
+  },
+  {
+    version: 'v1.5.0', date: '2026-10-10', tag: '新功能', tagColor: 'text-green-500 bg-green-500/15',
+    items: [
+      '新增好友系统：每人一个 ID，可复制分享、输入 ID 加好友、好友列表一键发单聊',
+      '新增通知中心：顶栏铃铛实时提示好友请求与群邀请，可在通知里接受/拒绝',
+      '群聊支持「邀请进群」（输入 ID 发通知，确认后入群）与「添加/移除 AI」',
+      '主页布局调整：推荐歌单与今日回顾互换位置，今日回顾内容更丰富（数据统计 + 个性化建议）',
+      '修复 AI 消息对齐（稳定显示在左侧），最近记忆卡片固定高度',
+      '全站页面切换增加加载动画，关闭动画效果开关现在真正生效',
+    ],
+  },
   {
     version: 'v1.4.0', date: '2026-10-09', tag: '优化', tagColor: 'text-amber-500 bg-amber-500/15',
     items: [
@@ -98,27 +152,21 @@ export default function SettingsPage() {
 }
 
 function AppearanceTab() {
-  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const ui = useUiStore()
+  const { data: wallpaperList } = useQuery({
+    queryKey: ['wallpapers'],
+    queryFn: async () => (await fetch('/api/wallpapers').then((r) => r.json())).data ?? [],
+  })
   return (
     <GlassCard className="space-y-6 p-6">
       <div>
-        <Label className="mb-2 block">主题模式</Label>
-        <div className="flex gap-2">
-          {['light', 'dark', 'system'].map((t) => (
-            <Button key={t} variant={theme === t ? 'default' : 'glass'} onClick={() => setTheme(t)}>
-              {t === 'light' ? '亮色' : t === 'dark' ? '暗色' : '跟随系统'}
-            </Button>
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">跟随系统时会根据日出日落自动切换（SunCalc），过渡 300ms 不闪屏</p>
-      </div>
-      <div>
-        <Label className="mb-2 block">玻璃质感强度</Label>
-        <div className="flex gap-2">
-          {([1, 2, 3] as const).map((l) => (
+        <Label className="mb-2 block">质感</Label>
+        <div className="flex flex-wrap gap-2">
+          {([1, 2, 3, 4] as const).map((l) => (
             <Button key={l} variant={ui.glassLevel === l ? 'default' : 'glass'} onClick={() => ui.setGlassLevel(l)}>
-              {l === 1 ? '轻 (blur-8)' : l === 2 ? '中 (blur-16)' : '重 (blur-24)'}
+              {l === 1 ? '液态玻璃' : l === 2 ? '毛玻璃' : l === 3 ? '亚克力' : '扁平化'}
             </Button>
           ))}
         </div>
@@ -147,9 +195,46 @@ function AppearanceTab() {
         </div>
         <Switch checked={ui.animations} onCheckedChange={ui.setAnimations} />
       </div>
+
+      <div>
+        <Label className="mb-2 block">壁纸</Label>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          <button
+            onClick={() => { ui.setWallpaper(''); toast.success('已恢复默认动态壁纸') }}
+            className={`aspect-video overflow-hidden rounded-lg border text-[10px] transition-all ${mounted && ui.wallpaper === '' ? 'border-primary ring-1 ring-primary' : 'border-border hover:opacity-80'}`}
+          >
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white">默认</div>
+          </button>
+          {(wallpaperList ?? []).map((w: any) => (
+            <button
+              key={w.src}
+              onClick={() => { ui.setWallpaper(w.src); toast.success(`已切换壁纸：${w.label}`) }}
+              className={`relative aspect-video overflow-hidden rounded-lg border transition-all ${mounted && ui.wallpaper === w.src ? 'border-primary ring-1 ring-primary' : 'border-border hover:opacity-80'}`}
+              title={w.label}
+            >
+              {w.html ? (
+                <span className="flex h-full items-center justify-center bg-gradient-to-br from-slate-700 to-indigo-900 text-[10px] text-white">▶ {w.label}</span>
+              ) : (
+                <img src={w.src} alt={w.label} className="h-full w-full object-cover" />
+              )}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1.5 text-xs text-muted-foreground">壁纸文件位于 public/wallpapers/ 目录，可自行放入图片后在此选择</p>
+      </div>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <Label className="!mb-0">背景模糊度</Label>
+          <span className="text-xs text-muted-foreground">{ui.bgBlur}px</span>
+        </div>
+        <Slider value={[ui.bgBlur]} onValueChange={(v) => ui.setBgBlur(v[0] ?? 0)} max={20} step={1} />
+        <p className="mt-1 text-xs text-muted-foreground">数值越大背景越虚化，突出前景内容</p>
+      </div>
     </GlassCard>
   )
 }
+
 
 function MusicTab() {
   const [keyword, setKeyword] = useState('')

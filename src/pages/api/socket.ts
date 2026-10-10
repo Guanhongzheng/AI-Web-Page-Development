@@ -24,6 +24,7 @@ export default function handler(req: NextApiRequest, res: NextResponseWithSocket
       if (!onlineUsers.has(userId)) onlineUsers.set(userId, new Set())
       onlineUsers.get(userId)!.add(socket.id)
       socket.join(`user:${userId}`)
+      io.emit('presence', { userId, online: true })
 
       socket.on('join-conversation', (convId: string) => {
         socket.join(`conv:${convId}`)
