@@ -32,3 +32,8 @@ secrets/
 .idea
 .vscode/*.log
 .workbuddy/
+
+# ---- 仅本地参考，不上传公开仓库 ----
+# 评分报告含项目弱点诊断与提分策略；上传步骤属内部操作手册
+docs/传智杯AI-WEB赛道-评分报告.md
+docs/GIT-上传GitHub步骤.md

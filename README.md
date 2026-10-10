@@ -80,9 +80,9 @@ prisma/schema.prisma      # 20 张表
 
 - [API 文档](./docs/API.md)
 - [答辩 PPT 大纲](./docs/DEFENSE.md)
-- [Git 版本管理说明](./docs/GIT-版本管理.md)
-- [上传到 GitHub 步骤](./docs/GIT-上传GitHub步骤.md)
 - [安全合规 · 敏感信息管理](./docs/安全合规-敏感信息管理.md)
+- [Git 版本管理说明](./docs/GIT-版本管理.md)
+- [技术升级方案（RAG / Agent / 多模态）](./docs/技术升级方案-RAG-Agent-多模态.md)
 
 ## 📜 关于本仓库历史
 
