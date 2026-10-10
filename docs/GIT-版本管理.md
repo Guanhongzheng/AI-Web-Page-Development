@@ -5,25 +5,24 @@
 ## 一、历史结构
 
 ```
-97b7bfd          docs: 新增上传 GitHub 操作清单
-40a950c          docs: README 声明仓库历史来源
-ec2d976          chore: 忽略 .workbuddy 目录；文档同步
-8895e1d          docs: 新增 Git 版本管理说明
-f74c7d1  v1.0    chore: 建立 Git 版本控制基线        ← 基线
-cde45f1  v0.5    chore(snapshot): 阶段快照 5   (10-10 20:04)
-3d575cc  v0.4    chore(snapshot): 阶段快照 4   (10-10 19:36)
-95b62a6  v0.3    chore(snapshot): 阶段快照 3   (10-09 23:56)
-44698dd  v0.2    chore(snapshot): 阶段快照 2   (10-09 23:32)
-62fe325  v0.1    chore(snapshot): 阶段快照 1   (10-09 22:47)
-09759b8          Initial commit   ← GitHub 建库时自动生成的根提交
+317f9fd          docs: 同步远程仓库配置说明与推送方式
+2f3d0f1          docs: 新增上传 GitHub 操作清单
+72b42ef          docs: README 声明仓库历史来源
+2d23f29          chore: 忽略 .workbuddy 目录；文档同步
+06248bb          docs: 新增 Git 版本管理说明
+7b44947  v1.0    chore: 建立 Git 版本控制基线        ← 基线
+9582b55  v0.5    chore(snapshot): 阶段快照 5   (10-10 20:04)
+d271950  v0.4    chore(snapshot): 阶段快照 4   (10-10 19:36)
+ba5bf8a  v0.3    chore(snapshot): 阶段快照 3   (10-09 23:56)
+cd6cab0  v0.2    chore(snapshot): 阶段快照 2   (10-09 23:32)
+5cf487e  v0.1    chore(snapshot): 阶段快照 1   (10-09 22:47)   ← 根提交
 ```
 
 每条提交的文件数：v0.1=100、v0.2=101、v0.3=104、v0.4=123、v0.5=123、v1.0=126，其后 127~128。
 所有提交均不含 `node_modules`、`.next`、`.env`、`*.db`、`.workbuddy`。
 全部提交的作者均为：`官弘政 <3038641679@qq.com>`。
 
-> 历史根部是 GitHub 建库时自动生成的 `Initial commit`（只含一个空的 README.md），
-> 项目自身的历史完整接在它之上，因此推送到 GitHub 是**正常快进**，无需 `--force`。
+> 历史为一条干净的线性链，**根提交即「阶段快照 1」**（无父提交），共 11 条。
 
 > **关于历史来源**：`v0.1` ~ `v0.5` 由开发期间的本地阶段快照整理入库，属于**阶段性整体快照**（粒度粗），并非逐次的小提交。详见 README「关于本仓库历史」。
 
@@ -113,17 +112,17 @@ git config user.email   # 3038641679@qq.com
 
 | 项 | 值 |
 |---|---|
-| 地址 | `https://github.com/Guanhongzheng/-AI-WEB-.git` |
+| 地址 | `https://github.com/Guanhongzheng/AI-Web-Page-Development.git` |
 | 可见性 | Public |
-| 上游分支 | `origin/main`（已 `git branch --set-upstream-to=origin/main main`） |
-| 推送方式 | **fast-forward 快进**（本地历史接在远端根提交之上），**无需 `--force`** |
+| 仓库状态 | **全新空仓库**（0 提交、0 分支），首次推送即建立远程 `main` |
+| 推送方式 | **首次推送直接 `git push -u origin main`**，无需 `--force`、无需合并 |
 
-远端原有 1 个提交 `09759b8 Initial commit`（GitHub 建库时自动生成，仅含一个内容为 `# -AI-WEB-` 的 README.md）。项目自身的 10 条提交已重放到该提交之上，因此两条历史已连成线性。
+> 早期的 `-AI-WEB-` 仓库已弃用，远程地址已切换为新仓库；旧仓库的远程跟踪引用已用 `git fetch --prune` 清除。
 
 ### 推送（在项目根目录执行）
 
 ```bash
-git push
+git push -u origin main
 git push origin --tags      # 标签必须单独推，否则 v0.1~v1.0 不会上传
 ```
 
