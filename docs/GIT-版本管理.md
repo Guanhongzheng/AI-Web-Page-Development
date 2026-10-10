@@ -5,19 +5,25 @@
 ## 一、历史结构
 
 ```
-4c6424a  (main)  chore: 忽略 .workbuddy 目录；文档同步
-7bc0cd9          docs: 新增 Git 版本管理说明
-0b784e9  v1.0    chore: 建立 Git 版本控制基线        ← 基线（= 当前工作区内容）
-0274f8e  v0.5    chore(snapshot): 阶段快照 5   (10-10 20:04)
-79c05cb  v0.4    chore(snapshot): 阶段快照 4   (10-10 19:36)
-578b831  v0.3    chore(snapshot): 阶段快照 3   (10-09 23:56)
-e72032c  v0.2    chore(snapshot): 阶段快照 2   (10-09 23:32)
-f533125  v0.1    chore(snapshot): 阶段快照 1   (10-09 22:47)
+97b7bfd          docs: 新增上传 GitHub 操作清单
+40a950c          docs: README 声明仓库历史来源
+ec2d976          chore: 忽略 .workbuddy 目录；文档同步
+8895e1d          docs: 新增 Git 版本管理说明
+f74c7d1  v1.0    chore: 建立 Git 版本控制基线        ← 基线
+cde45f1  v0.5    chore(snapshot): 阶段快照 5   (10-10 20:04)
+3d575cc  v0.4    chore(snapshot): 阶段快照 4   (10-10 19:36)
+95b62a6  v0.3    chore(snapshot): 阶段快照 3   (10-09 23:56)
+44698dd  v0.2    chore(snapshot): 阶段快照 2   (10-09 23:32)
+62fe325  v0.1    chore(snapshot): 阶段快照 1   (10-09 22:47)
+09759b8          Initial commit   ← GitHub 建库时自动生成的根提交
 ```
 
-每条提交的文件数：v0.1=100、v0.2=101、v0.3=104、v0.4=123、v0.5=123、v1.0=126。
+每条提交的文件数：v0.1=100、v0.2=101、v0.3=104、v0.4=123、v0.5=123、v1.0=126，其后 127~128。
 所有提交均不含 `node_modules`、`.next`、`.env`、`*.db`、`.workbuddy`。
 全部提交的作者均为：`官弘政 <3038641679@qq.com>`。
+
+> 历史根部是 GitHub 建库时自动生成的 `Initial commit`（只含一个空的 README.md），
+> 项目自身的历史完整接在它之上，因此推送到 GitHub 是**正常快进**，无需 `--force`。
 
 > **关于历史来源**：`v0.1` ~ `v0.5` 由开发期间的本地阶段快照整理入库，属于**阶段性整体快照**（粒度粗），并非逐次的小提交。详见 README「关于本仓库历史」。
 
@@ -102,3 +108,36 @@ git config user.email   # 3038641679@qq.com
   git push origin --tags
   ```
 - `.workbuddy/` 是本机工作记录目录，**已从版本库移除并忽略**，不会上传到 GitHub。
+
+## 七、远程仓库
+
+| 项 | 值 |
+|---|---|
+| 地址 | `https://github.com/Guanhongzheng/-AI-WEB-.git` |
+| 可见性 | Public |
+| 上游分支 | `origin/main`（已 `git branch --set-upstream-to=origin/main main`） |
+| 推送方式 | **fast-forward 快进**（本地历史接在远端根提交之上），**无需 `--force`** |
+
+远端原有 1 个提交 `09759b8 Initial commit`（GitHub 建库时自动生成，仅含一个内容为 `# -AI-WEB-` 的 README.md）。项目自身的 10 条提交已重放到该提交之上，因此两条历史已连成线性。
+
+### 推送（在项目根目录执行）
+
+```bash
+git push
+git push origin --tags      # 标签必须单独推，否则 v0.1~v1.0 不会上传
+```
+
+首次推送需认证：用户名填 GitHub 用户名，**密码填 Personal Access Token（不是登录密码）**。详见 [上传到 GitHub 步骤](./GIT-上传GitHub步骤.md)。
+
+### 若推送报 TLS / 连接错误
+
+本机若使用了会拦截 HTTPS 的代理软件，可能出现
+`schannel: ... CRYPT_E_NO_REVOCATION_CHECK` 或 `unable to get local issuer certificate`。
+可临时在单条命令里关闭证书校验（不写入配置）：
+
+```bash
+git -c http.sslVerify=false push origin main
+git -c http.sslVerify=false push origin --tags
+```
+
+或者配好代理后正常推送（见上传步骤文档"网络问题"一节）。

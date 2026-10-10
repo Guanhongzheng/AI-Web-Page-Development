@@ -1,6 +1,9 @@
 # 上传到 GitHub —— 操作清单
 
-> 适用：本项目当前状态（`main` 分支、9 条提交、6 个标签、仓库 2.7 MB、尚未连接远程）
+> 适用：本项目当前状态（`main` 分支、10 条提交、6 个标签、仓库 2.7 MB）
+>
+> ⏩ **本仓库已完成**：远程地址 `https://github.com/Guanhongzheng/-AI-WEB-.git` 已配置、上游已设好、远端根提交已衔接。**请直接跳到第二节「推送」执行**。
+> 下面第〇、一节是通用做法，保留作参考（仅在需要另建仓库时使用）。
 
 ---
 
@@ -60,11 +63,11 @@ git remote -v
 ## 二、推送（两条命令，第二条别漏）
 
 ```bash
-git push -u origin main
+git push
 git push origin --tags
 ```
 
-- 第一条：推送 `main` 分支的 9 条提交（含全部历史）
+- 第一条：推送 `main` 分支的 10 条提交（上游已设好，直接 `git push` 即可；如换仓库则用 `git push -u origin main`）
 - 第二条：推送 `v0.1` ~ `v0.5`、`v1.0` 共 6 个标签
   **标签默认不会被推送**，漏了这句版本标记就丢在本地了。
 
@@ -144,7 +147,8 @@ git push
 | `remote: Support for password authentication was removed` | 填了登录密码 | 改用 PAT（见第二节） |
 | `fatal: Authentication failed for 'https://github.com/...'` | Token 填错 / 过期 / 权限没勾 `repo` | 重新生成 PAT；或清掉旧凭据后重试 |
 | `Failed to connect to github.com port 443: Timed out` | 网络不通（国内常见） | 见下方"网络问题" |
-| `! [rejected] main -> main (fetch first)` / `remote contains work that you do not have` | 建库时勾了 README / .gitignore | 先 `git pull --rebase origin main`，解决冲突后再 `git push -u origin main` |
+| `! [rejected] main -> main (fetch first)` / `remote contains work that you do not have` | 建库时勾了 README / .gitignore | 先 `git pull --rebase origin main`，解决冲突后再 `git push -u origin main`（**本项目这种情况已提前处理**：远端自动生成的 `Initial commit` 已作为历史根被衔接，推送为正常快进，无需强推） |
+| `schannel: ... CRYPT_E_NO_REVOCATION_CHECK` 或 `unable to get local issuer certificate` | 本机代理软件拦截 HTTPS，Git 证书校验失败 | 单条命令临时关闭校验：`git -c http.sslVerify=false push origin main`（**不要**写进全局配置） |
 | `error: src refspec main does not match any` | 本地没有 `main` 分支 | 先确认：`git branch -a`，切到 `main` 再推 |
 | `fatal: remote origin already exists` | 已经配过 origin | `git remote set-url origin <新地址>` 直接改 |
 | 推送卡住不动、输入框没反应 | 认证弹窗被挡住了 | 换用 Git Bash 终端重试；或检查是否弹出了凭据窗口 |
