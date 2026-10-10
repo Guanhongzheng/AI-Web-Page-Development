@@ -5,16 +5,18 @@
 ## 一、历史结构
 
 ```
-f81165e  v1.0  chore: 初始化 Git 仓库并提交基线        ← 当前 HEAD（= 当前工作区）
-cb50944  v0.5  导入历史版本 5   (10-10 20:04)
-274e5fb  v0.4  导入历史版本 4   (10-10 19:36)
-911fe09  v0.3  导入历史版本 3   (10-09 23:56)
-c2cdff8  v0.2  导入历史版本 2   (10-09 23:32)
-61b0bee  v0.1  导入历史版本 1   (10-09 22:47)
+b777446  (main)  docs: 新增 Git 版本管理说明
+8546e76  v1.0    chore: 初始化 Git 仓库并提交基线   ← 基线（= 当前工作区内容）
+2635acf  v0.5    导入历史版本 5   (10-10 20:04)
+d0b8353  v0.4    导入历史版本 4   (10-10 19:36)
+2224f10  v0.3    导入历史版本 3   (10-09 23:56)
+d59258e  v0.2    导入历史版本 2   (10-09 23:32)
+872f131  v0.1    导入历史版本 1   (10-09 22:47)
 ```
 
-每条提交的文件数：v0.1=100、v0.2=101、v0.3=104、v0.4=123、v0.5=123、v1.0=127。
-所有提交均不含 `node_modules`、`.next`、`.env`、`*.db`。
+每条提交的文件数：v0.1=100、v0.2=101、v0.3=104、v0.4=123、v0.5=123、v1.0=126。
+所有提交均不含 `node_modules`、`.next`、`.env`、`*.db`、`.workbuddy`。
+全部提交的作者均为：`官弘政 <3038641679@qq.com>`。
 
 ## 二、查看历史
 
@@ -76,15 +78,20 @@ git commit -m "feat: 描述这次改了什么"
 
 ## 五、当前身份配置
 
-提交身份目前是占位值，建议改成自己的：
+已设置为本人身份（提交会归因到 GitHub 账号）：
 
 ```bash
-git config user.name "你的名字"
-git config user.email "你的邮箱"
+git config user.name    # 官弘政
+git config user.email   # 3038641679@qq.com
 ```
+
+> GitHub 只按**注册邮箱**归因贡献。请确认该邮箱已添加到你 GitHub 账号的 Email 设置中，否则贡献不会计入你的贡献图。
 
 ## 六、注意
 
-- `.gitignore` 已忽略 `node_modules`、`.next`、`.env`、`*.db`、`*.tsbuildinfo`。
+- `.gitignore` 已忽略 `node_modules`、`.next`、`.env`、`*.db`、`*.tsbuildinfo`、`.workbuddy`。
 - `.git/info/exclude` 另有一份本地兜底忽略规则（不会提交到仓库）。
 - 桌面上的 5 个副本文件夹与 2 个 zip 在导入确认无误后即可删除。
+- 历史重写前的旧提交保留在本地分支 `_backup_before_rewrite`，确认无误后可删除：
+  `git branch -D _backup_before_rewrite`
+- `.workbuddy/` 是本机工作记录目录，**已从版本库移除并忽略**，不会上传到 GitHub。
