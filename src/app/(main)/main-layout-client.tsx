@@ -47,16 +47,19 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
   const [searchResults, setSearchResults] = useState<{ conversations: any[]; memories: any[]; users: any[] }>({ conversations: [], memories: [], users: [] })
   const searchRef = useRef<HTMLInputElement>(null)
   const mainScrollRef = useRef<HTMLDivElement>(null)
+  const forceIntroRef = useRef(false)
   // 是否已进入主应用区（滚过介绍页）：控制 Dock / 顶栏按钮区 / 播放器显示
   const [showChrome, setShowChrome] = useState(false)
 
   // 路由切换：有浏览器记忆(cookie)则主页直接进入应用，否则展示介绍页；子页默认在应用区
   useEffect(() => {
     const vh = window.innerHeight
-    const entered = document.cookie.split('; ').some((c) => c.startsWith('pm_entered='))
     if (pathname === '/') {
-      window.scrollTo({ top: entered ? vh : 0, behavior: 'auto' })
-      setShowChrome(entered)
+      const entered = document.cookie.split('; ').some((c) => c.startsWith('pm_entered='))
+      const toIntro = forceIntroRef.current || !entered
+      forceIntroRef.current = false
+      window.scrollTo({ top: toIntro ? 0 : vh, behavior: 'auto' })
+      setShowChrome(!toIntro)
     } else {
       document.cookie = 'pm_entered=1; path=/; max-age=604800; SameSite=Lax'
       window.scrollTo({ top: 0, behavior: 'auto' })
@@ -83,11 +86,20 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
     const onWheel = (e: WheelEvent) => {
       const y = window.scrollY
       const vh = window.innerHeight
-      // 已进入主应用：主页内容可内部滚动；仅当内容已在顶部时，阻止向上滚回介绍页
+      // 已进入主应用：仅当光标下所有可滚动区都已到顶时，才阻止向上滚回介绍页
       if (y >= vh * 0.5 && e.deltaY < 0) {
-        const sc = mainScrollRef.current
-        if (sc && sc.scrollTop > 0) return // 内容未到顶，照常内部上滚
-        if (y <= vh + 4) e.preventDefault() // 内容已到顶，阻止回到介绍页
+        let el = e.target as HTMLElement | null
+        let canScrollUp = false
+        while (el && el !== document.body) {
+          const oy = getComputedStyle(el).overflowY
+          if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight && el.scrollTop > 0) {
+            canScrollUp = true
+            break
+          }
+          el = el.parentElement
+        }
+        if (canScrollUp) return // 卡片/内容还能上滑，放行
+        if (y <= vh + 4) e.preventDefault() // 都已到顶，阻止回到介绍页
         return
       }
       if (lock) return
@@ -218,7 +230,21 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="icon" type="button" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setShowChrome(false) }} title="回到介绍页">
+          <Button
+            variant="ghost"
+            size="icon"
+            type="button"
+            onClick={() => {
+              if (pathname === '/') {
+                setShowChrome(false)
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              } else {
+                forceIntroRef.current = true
+                router.push('/')
+              }
+            }}
+            title="回到介绍页"
+          >
             <ArrowUpToLine className="h-4 w-4" />
           </Button>
           <NotificationsPopover />
@@ -250,12 +276,11 @@ export function MainLayoutClient({ user, children }: { user: { id: string; usern
         </AnimatePresence>
       </main>
 
-      {/* 底部 Dock 导航栏：仅在主应用区显示，介绍页隐藏 */}
+      {/* 底部 Dock 导航栏：介绍页下滑过渡隐藏，其余时候常驻显示 */}
       <nav
-        className={`${texCls} ${isFlat ? '' : 'glass-shine'} fixed bottom-4 left-1/2 z-40 flex items-center gap-1.5 rounded-2xl border border-border p-2 shadow-2xl transition-all duration-300 ${showChrome ? 'opacity-100' : 'pointer-events-none translate-y-24 opacity-0'}`}
+        className={`${texCls} ${isFlat ? '' : 'glass-shine'} fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-2xl border border-border p-2 shadow-2xl transition-all duration-500 ease-out ${showChrome ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-32 opacity-0'}`}
         style={{
           backgroundColor: isFlat ? 'hsl(var(--card))' : 'color-mix(in srgb, hsl(var(--background)) 82%, transparent)',
-          transform: 'translateX(-50%)',
         }}
       >
         {NAV.map((item) => {
