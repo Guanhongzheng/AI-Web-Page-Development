@@ -69,7 +69,7 @@ src/
 └── hooks/                # use-socket 等
 server/
 └── mcp-server.ts         # MCP Server（14 工具）
-prisma/schema.prisma      # 19 张表
+prisma/schema.prisma      # 20 张表
 ```
 
 ## 📚 文档
