@@ -5,18 +5,21 @@
 ## 一、历史结构
 
 ```
-b777446  (main)  docs: 新增 Git 版本管理说明
-8546e76  v1.0    chore: 初始化 Git 仓库并提交基线   ← 基线（= 当前工作区内容）
-2635acf  v0.5    导入历史版本 5   (10-10 20:04)
-d0b8353  v0.4    导入历史版本 4   (10-10 19:36)
-2224f10  v0.3    导入历史版本 3   (10-09 23:56)
-d59258e  v0.2    导入历史版本 2   (10-09 23:32)
-872f131  v0.1    导入历史版本 1   (10-09 22:47)
+4c6424a  (main)  chore: 忽略 .workbuddy 目录；文档同步
+7bc0cd9          docs: 新增 Git 版本管理说明
+0b784e9  v1.0    chore: 建立 Git 版本控制基线        ← 基线（= 当前工作区内容）
+0274f8e  v0.5    chore(snapshot): 阶段快照 5   (10-10 20:04)
+79c05cb  v0.4    chore(snapshot): 阶段快照 4   (10-10 19:36)
+578b831  v0.3    chore(snapshot): 阶段快照 3   (10-09 23:56)
+e72032c  v0.2    chore(snapshot): 阶段快照 2   (10-09 23:32)
+f533125  v0.1    chore(snapshot): 阶段快照 1   (10-09 22:47)
 ```
 
 每条提交的文件数：v0.1=100、v0.2=101、v0.3=104、v0.4=123、v0.5=123、v1.0=126。
 所有提交均不含 `node_modules`、`.next`、`.env`、`*.db`、`.workbuddy`。
 全部提交的作者均为：`官弘政 <3038641679@qq.com>`。
+
+> **关于历史来源**：`v0.1` ~ `v0.5` 由开发期间的本地阶段快照整理入库，属于**阶段性整体快照**（粒度粗），并非逐次的小提交。详见 README「关于本仓库历史」。
 
 ## 二、查看历史
 
@@ -91,7 +94,11 @@ git config user.email   # 3038641679@qq.com
 
 - `.gitignore` 已忽略 `node_modules`、`.next`、`.env`、`*.db`、`*.tsbuildinfo`、`.workbuddy`。
 - `.git/info/exclude` 另有一份本地兜底忽略规则（不会提交到仓库）。
-- 桌面上的 5 个副本文件夹与 2 个 zip 在导入确认无误后即可删除。
-- 历史重写前的旧提交保留在本地分支 `_backup_before_rewrite`，确认无误后可删除：
-  `git branch -D _backup_before_rewrite`
+- 桌面上的 5 个副本文件夹与 2 个 zip 在确认无误后即可删除。
+- 历史整理期间产生的临时备份分支已全部删除。
+- **推送时只推 main 与标签，不要用 `git push --all` / `--mirror`**：
+  ```bash
+  git push -u origin main
+  git push origin --tags
+  ```
 - `.workbuddy/` 是本机工作记录目录，**已从版本库移除并忽略**，不会上传到 GitHub。
