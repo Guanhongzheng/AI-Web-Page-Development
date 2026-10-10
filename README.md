@@ -26,7 +26,11 @@
 npm install
 
 # 2. 配置环境变量
-cp .env.example .env   # 填入 ENCRYPTION_KEY（64 位 hex）等
+cp .env.example .env
+# 生成并填入必需的密钥（不要使用任何示例值）
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# 将输出分别填入 .env 的 ENCRYPTION_KEY 与 JWT_SECRET
+# 详见 docs/安全合规-敏感信息管理.md
 
 # 3. 初始化数据库
 npx prisma db push
@@ -78,6 +82,7 @@ prisma/schema.prisma      # 20 张表
 - [答辩 PPT 大纲](./docs/DEFENSE.md)
 - [Git 版本管理说明](./docs/GIT-版本管理.md)
 - [上传到 GitHub 步骤](./docs/GIT-上传GitHub步骤.md)
+- [安全合规 · 敏感信息管理](./docs/安全合规-敏感信息管理.md)
 
 ## 📜 关于本仓库历史
 
@@ -87,7 +92,11 @@ prisma/schema.prisma      # 20 张表
 
 ## 🔒 隐私与安全承诺
 
+- **所有密钥仅通过环境变量配置，仓库内不含任何真实密钥**。`.env` 已被 `.gitignore` 忽略，仓库只提交模板 `.env.example`（内容为占位符，不含可用密钥）
+- 代码中**不存在硬编码兜底密钥**：`ENCRYPTION_KEY` / `JWT_SECRET` 缺失或格式非法时程序直接报错，不会退化为使用公开的默认密钥
 - API Key 全程 AES-256-GCM 加密，前端与日志只显示掩码（前 6 位 + 后 4 位）
 - AI 辅助用户对话**必须用户主动触发**，不偷看私信
 - 群聊中 AI 默认只在被 @ 时回复，不打扰
 - 所有数据可查看、可导出、可删除
+
+> 具体政策、审计结论、密钥生成与轮换流程见 [安全合规 · 敏感信息管理](./docs/安全合规-敏感信息管理.md)。

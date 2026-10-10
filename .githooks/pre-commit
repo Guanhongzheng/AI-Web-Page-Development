@@ -1,0 +1,21 @@
+#!/bin/sh
+# 提交前密钥自检 —— 防止把密钥误提交进公开仓库
+#
+# 本文件随仓库分发，启用方式（每个克隆者执行一次）：
+#   git config core.hooksPath .githooks
+#
+# 临时跳过（不推荐）：git commit --no-verify
+
+# 找不到 node 时跳过，避免因环境问题阻塞正常提交
+if ! command -v node >/dev/null 2>&1; then
+  echo "[pre-commit] 未找到 node，跳过密钥自检"
+  exit 0
+fi
+
+echo "[pre-commit] 运行密钥自检 ..."
+if ! node scripts/check-secrets.mjs; then
+  echo ""
+  echo "[pre-commit] ❌ 检测到疑似密钥泄露，提交已中止。"
+  echo "             真实密钥请通过环境变量配置；确认误报可用 git commit --no-verify 跳过。"
+  exit 1
+fi

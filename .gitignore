@@ -1,17 +1,34 @@
+# ---- 依赖与构建产物 ----
 node_modules
 .next
 out
 dist
-*.db
-*.db-journal
-.env
-.env.local
-.DS_Store
-*.log
-.vercel
 coverage
 .turbo
 *.tsbuildinfo
+
+# ---- 数据库文件（含演示数据，不入库）----
+*.db
+*.db-journal
+
+# ---- 环境变量：只提交模板 .env.example，其余一律忽略 ----
+.env
+.env.*
+!.env.example
+
+# ---- 密钥 / 凭据类文件（禁止入库）----
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+credentials.*
+secrets/
+
+# ---- 其他 ----
+.DS_Store
+*.log
+.vercel
 .idea
 .vscode/*.log
 .workbuddy/

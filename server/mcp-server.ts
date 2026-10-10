@@ -14,6 +14,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { encrypt } from '../src/lib/crypto'
 
 const prisma = new PrismaClient()
 
@@ -53,12 +54,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         output = { logged: true }
         break
       case 'encrypt_data': {
-        const crypto = await import('crypto')
-        const key = Buffer.from(process.env.ENCRYPTION_KEY!.padEnd(64, '0').slice(0, 64), 'hex')
-        const iv = crypto.randomBytes(12)
-        const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
-        const enc = Buffer.concat([cipher.update((args as any).text, 'utf8'), cipher.final()])
-        output = { encrypted: [iv.toString('base64'), cipher.getAuthTag().toString('base64'), enc.toString('base64')].join(':') }
+        // 复用统一的加密模块：密钥取自环境变量 ENCRYPTION_KEY，缺失即报错（不再自行拼凑密钥）
+        output = { encrypted: encrypt((args as any).text) }
         break
       }
       default:
