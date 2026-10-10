@@ -77,6 +77,7 @@ prisma/schema.prisma      # 19 张表
 - [API 文档](./docs/API.md)
 - [答辩 PPT 大纲](./docs/DEFENSE.md)
 - [Git 版本管理说明](./docs/GIT-版本管理.md)
+- [上传到 GitHub 步骤](./docs/GIT-上传GitHub步骤.md)
 
 ## 📜 关于本仓库历史
 
